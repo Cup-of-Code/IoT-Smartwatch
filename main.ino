@@ -1,3 +1,6 @@
+//Code for building a diy smartwatch based on a CircuitPlaygroundExpress. 
+//Still a work in progress, commented out sections are planned to be implemented later
+
 #include <Adafruit_GFX.h>         // Core graphics library
 #include <Adafruit_GC9A01A.h>      // Hardware-specific library for GC9A01A
 #include <Adafruit_SPIFlash.h>    // SPI / QSPI flash library
@@ -27,11 +30,7 @@
 #define _MISO -1
 #define _RST -1
 
-Adafruit_GC9A01A tft( _CS, _DC, _MOSI,  _SCLK, _MISO, _RST); 
-
-String ssid = "ssid here";
-String password = "passwordhere";
-String mqtt_server = "YOUR_MQTT_SERVER";
+Adafruit_GC9A01A tft( _CS, _DC, _MOSI,  _SCLK, _MISO, _RST); //initilized LCD as "tft".
 
 
 //////// SPI FLASH RELATED ///////// Taken and adapted from example code in Adafruit ImageReader library: https://github.com/adafruit/Adafruit_ImageReader/blob/master/examples/TFTGizmo/TFTGizmo.ino
@@ -127,12 +126,15 @@ void setup() {
   homepage(); //runs the homepage function to display time etc
   // HeartrateSetup(); //will be implemented later 
   
+    Serial1.write(step_count);
   
 }
   
 void loop() {
+
   //Needs to be edited so that the functions have better timing.
   if (CircuitPlayground.slideSwitch()) {
+
     //write code for deep sleep functionality here
   }
   else{
@@ -143,7 +145,9 @@ void loop() {
   UARTconnect();
  // IR_send();
   //rightButtonIR();
-  }
+  //stepCountSend();
+  
+    }
  
 
 
@@ -288,6 +292,12 @@ void stepCounter(){
   }
 }
 
+void stepCountSend(){
+  if (rtc.getHours()==23 && rtc.getMinutes()==59){ //checks if time is 23:59
+    Serial1.write(step_count); //sends total step_count of the day
+    step_count = 0; //resets the step count for next day after sending the data
+  }
+}
 
 
 
@@ -405,6 +415,11 @@ void menuFunc(){
 // }
 
 // }
+
+
+
+
+
 
 
 

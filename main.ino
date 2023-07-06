@@ -1,6 +1,3 @@
-//Code for building a diy smartwatch based on a CircuitPlaygroundExpress. 
-//Still a work in progress, commented out sections are planned to be implemented later
-
 #include <Adafruit_GFX.h>         // Core graphics library
 #include <Adafruit_GC9A01A.h>      // Hardware-specific library for GC9A01A
 #include <Adafruit_SPIFlash.h>    // SPI / QSPI flash library
@@ -10,26 +7,14 @@
 #include <Fonts/FreeSansBold18pt7b.h>
 #include <PubSubClient.h>
 
- 
- 
-//  ///Heart rate related//////
-// #define PIN 6
-// #define NUMPIXELS 10
-// #define NUM_OVERSAMPLE 10
-// #define NUM_SAMPLES 20
-// Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-// float samples[NUM_SAMPLES];
-// float lastMean = 0;
-// ///////////////////////////////////////////
 
 //LCD pin connections on the CPE:
-#define _DC 6
+#define _DC 10
 #define _CS 9
 #define _MOSI 2
 #define _SCLK 3
 #define _MISO -1
 #define _RST -1
-
 Adafruit_GC9A01A tft( _CS, _DC, _MOSI,  _SCLK, _MISO, _RST); //initilized LCD as "tft".
 
 
@@ -49,12 +34,9 @@ Adafruit_GC9A01A tft( _CS, _DC, _MOSI,  _SCLK, _MISO, _RST); //initilized LCD as
 Adafruit_SPIFlash    flash(&flashTransport);
 FatVolume        filesys;
 Adafruit_ImageReader reader(filesys); // Image-reader, pass in flash filesys
-
-
 Adafruit_Image       img;        // An image loaded into RAM
 int32_t              width  = 0, // BMP image dimensions
                      height = 0;
-
 //////////////////////////////////////////////
 
 //STEP-COUNTER Related /////////////////////////////////////
@@ -63,6 +45,7 @@ int step_count = 0;     // Step counter
 float threshold = 5;   // Threshold to determine a step
 unsigned long lastStepTime = 0; // Time of last step
 unsigned int minStepDelay = 250; // Minimum delay between steps
+//////////////////////////////////////////////////////////////////
 
 /////////////////////////// Clock related////////////////////// 
 RTCZero rtc;
@@ -111,6 +94,20 @@ const unsigned char heart[] PROGMEM ={
 //////////////////////////////////////////////////////////////////////
 
 
+void heartrateSprite(){
+    //draws the previously defined sprite and puts a background rectangle behind it 
+  tft.fillRoundRect(130, 170,40 , 40, 5, 0x05f5);  
+  tft.drawBitmap(135, 175, heart, 30, 30, 0x05f5, 0xFFFF);
+}
+
+void footprintSprite(){
+  //draws the previously defined sprite and puts a background rectangle behind it 
+  tft.fillRoundRect(45, 170, 60, 40, 5, 0x05f5);  
+  tft.drawBitmap(50, 175, footprint, 30, 30, 0x05f5, 0xFFFF);
+}
+
+
+
 
 ///////////////////////// SETUP ///////////////////////////////////
 void setup() {
@@ -121,54 +118,61 @@ void setup() {
   Serial1.begin(115200);
   delay(2000);
   tft.begin();
- // CircuitPlayground.irReceiver.enableIRIn(); // Start the IR receiver //commented out, waiting to be implemented
+  //CircuitPlayground.irReceiver.enableIRIn(); // Start the IR receiver //commented out, waiting to be implemented
   //IR_protocol = 0; 
   homepage(); //runs the homepage function to display time etc
-  // HeartrateSetup(); //will be implemented later 
-  
-    Serial1.write(step_count);
   
 }
+
+
   
-void loop() {
-
-  //Needs to be edited so that the functions have better timing.
-  if (CircuitPlayground.slideSwitch()) {
-
-    //write code for deep sleep functionality here
-  }
-  else{
-
+void loop() {  
   stepCounter();
   updateTime();  
-  menuFunc();
+  //menuFunc();
   UARTconnect();
- // IR_send();
+  // IR_send();
   //rightButtonIR();
-  //stepCountSend();
-  
-    }
+}
  
 
 
-}
-void UARTconnect(){
-  ///This is the code that is responsible for the communication between the CPE and ESP-01 device. 
-  ///Makes it possible to send MQTT commands from the serial monitor, useful for debugging
-  /// Read data from the Serial Monitor and send it to ESP8266
+
+String weatherData = ""; // Global variable to store weather data
+
+void UARTconnect() {
+  // This code is responsible for the communication between the CPE and ESP-01 device. 
+  // It reads data from the Serial Monitor and sends it to ESP8266
   if (Serial.available()) {
     char data = Serial.read();
     Serial1.write(data);
   }
 
-  // Read data from ESP8266 and send it to the Serial Monitor
+  // Reads data from ESP8266 and sends it to the Serial Monitor
   if (Serial1.available()) {
-    char data = Serial1.read();
-    Serial.write(data);
+    String data = Serial1.readStringUntil('\n');
+    if (data.startsWith("Weather")) {  // assuming data format is "inTopic:someValue"
+      int colonIndex = data.indexOf(':');
+      if (colonIndex > -1) {
+        weatherData = data.substring(colonIndex+1);  // get the data part after the colon
+        homepage();
+        tft.setCursor(50, 40);
+        tft.setFont();
+        tft.setTextSize(2);
+        tft.print("Weather: ");
+        tft.setCursor(50,50);
+        tft.print(weatherData);
+      }
+    } else {
+      Serial.println( data);
+    }
   }
 }
 
+
+
 void homepage(){
+
   printWallpaper(); //PRINT WALLPAPER function
   initialTime(); //starts clock 
   footprintSprite(); 
@@ -301,20 +305,6 @@ void stepCountSend(){
 
 
 
-void heartrateSprite(){
-    //draws the previously defined sprite and puts a background rectangle behind it 
-  tft.fillRoundRect(130, 170,40 , 40, 5, 0x05f5);  
-  tft.drawBitmap(135, 175, heart, 30, 30, 0x05f5, 0xFFFF);
-}
-
-void footprintSprite(){
-  //draws the previously defined sprite and puts a background rectangle behind it 
-  tft.fillRoundRect(45, 170, 60, 40, 5, 0x05f5);  
-  tft.drawBitmap(50, 175, footprint, 30, 30, 0x05f5, 0xFFFF);
-}
-
-
-
 
 void rightButtonIR() {
     //Adapted from example code: https://github.com/adafruit/Adafruit_CircuitPlayground/tree/master/examples/Infrared_Demos/Infrared_Record
@@ -374,56 +364,3 @@ void menuFunc(){
       homepage();}
   }
 }
-
-// void HeartrateSetup(){
-
-//   pixels.begin();
-//   pixels.setBrightness(255);
-//   pixels.setPixelColor(1, pixels.Color(0,255,0));
-//   pixels.show();
-// }
-
-// void heartrateSensor(){
-//   for (int i = 0; i < NUM_SAMPLES; i++) {
-//     float oversample = 0;
-//     for (int s = 0; s < NUM_OVERSAMPLE; s++) {
-//       oversample += analogRead(LIGHTPIN);
-//     }
-//     samples[i] = oversample / NUM_OVERSAMPLE;
-//     float mean = 0;
-//     for (int j = 0; j < NUM_SAMPLES; j++) {
-//       mean += samples[j];
-//     }
-//     mean /= NUM_SAMPLES;
-//     Serial.println(samples[i] - mean);
-//     if (i > 0) {
-//       if (sign(samples[i]-mean) <= 0 && sign(samples[i-1]-mean) > 0) {
-//         pixels.setPixelColor(9, pixels.Color(200,0,0));
-//       } else {
-//         pixels.setPixelColor(9, pixels.Color(0,0,0));
-//       }
-//       pixels.show();
-//     }
-//     delay(25);
-//   }
-// }
-
-// int sign(float value) {
-//   if (value > 0) return 1;
-//   if (value < 0) return -1;
-//   return 0;
-// }
-
-// }
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,8 +1,9 @@
-# IoT-Smartwatch Project Tutorial
 Author: Charlotta Larmoijeur
 StudentID: cl224dp
 
 # Introduction
+
+            
 In this tutorial I will go through how to make a diy IoT smartwatch! This is a project that I wanted to tackle for a while, since I really liked the idea of making an open-source fully customizable smartwatch that I could build my own functionalities into. For now this will be step counting, weather forcast information and Infrared signal decoding and sending. The watch will then sync its data to a local Home Assistant server and with the help of MQTT, InfluxDB and Grafana you should be able to see the step count data in a visualized form. This will be useful to see which days you reach your step goals.
 
 This may not be the most feature-packed version of a smartwatch, but it does have the potential to be and the fun part is being to experiment with it and customize it how you want.
@@ -56,17 +57,18 @@ Apporoximate timeframe: Weekend project (assumes experience with Arduino and Hom
 
 
 ### Computer setup
-I mainly used the Arduino IDE for programming my device. The Circut Playground Express(CPE) is supported by both CircuitPython and Arduino, but there is more of a community around arduino and many available code libraries as well, so this made it an easy decision to use the Arduino IDE since it is very simple to use and also has built in functionality for flashing.
+I mainly used the Arduino IDE for programming my device. The Circuit Playground Express(CPE) is supported by both CircuitPython, MakeCode and Arduino, but there is more of a community around Arduino, more available code libraries as well as the fact that it is written in C++, which is generally more efficient than python, so this made it an easy decision to use the Arduino IDE as it is also simple to use as an IDE and it has built in functionality for flashing.
 
 Everything was set up on my Linux PC (running Pop! OS v22.04 LTS). Installing the arduino IDE can be done by downloading the correct version for your OS from: https://www.arduino.cc/en/software.
 
 ***Setting up the Arduino IDE:***
-1.   Arduno Boards Manager:  
+
+1.  **Arduno Boards Manager:**
     In order to add the Circuit Playground Express and ESP8266 board support to the IDE, you need to include some custom sources in the IDE preferences. Go to *file> Preferences > 'Additional Board Manager URLs*' and add the following two lines:
-    http://arduino.esp8266.com/stable/package_esp8266com_index.json
-https://adafruit.github.io/arduino-board-index/package_adafruit_index.json .
+        http://arduino.esp8266.com/stable/package_esp8266com_index.json
+        https://adafruit.github.io/arduino-board-index/package_adafruit_index.json .
 Now you should be able to choose both the 'Circuit Playground Express' or the 'Generic ESP8266 module' from the board manager option.
-2. Library Manager:
+2. **Library Manager:**
 You will also need some additional libraries installed in your code. 
 The ones used in the project code are:
   
@@ -85,7 +87,7 @@ You can open the library manager from *Tools > Manage Library* and add neccessar
 
 
 
-------
+
 ------
 
 
@@ -184,12 +186,12 @@ Github repo link: https://github.com/Cup-of-Code/IoT-Smartwatch
 
 
 
-**Core functionalities:
-    - Connectivity
-    - Step Counter
-    - Weather Forecast
-    - Infrared Signal  decoder/sender
-    - Battery Power
+    Core functionalities:
+      - Connectivity
+      - Step Counter
+      - Weather Forecast
+      - Infrared Signal  decoder/sender
+      - Battery Power
  
 #### Connectivity
 Ideally I would have wanted to try and use the LoRaWAN protocol because of its low power consumption and long range, but since this is a wearable project I am trying to keep the size as small as possible and a antenna on your arm is perhaps not very practical... There also were not any gateways nearby were I live, so in the end I chose to use wifi for connectivity. 

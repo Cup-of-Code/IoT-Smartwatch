@@ -1,4 +1,4 @@
-##IoT smartwatch - Tutorial
+## IoT smartwatch - Tutorial
 
 Author: Charlotta Larmoijeur
 StudentID: cl224dp

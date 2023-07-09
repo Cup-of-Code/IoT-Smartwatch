@@ -5,9 +5,10 @@ StudentID: cl224dp
 Github Repository link: https://github.com/Cup-of-Code/IoT-Smartwatch
 
 # Objective
-#### Video demo:
 
-<iframe width="560" height="315" src="https://youtu.be/k_mWFVTUdE4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<img src="https://hackmd.io/_uploads/B1-DajdK2.jpg" alt="Drawing" style="width: 500px;"/>
+
+#### Video demo: https://youtu.be/k_mWFVTUdE4
 
 
 

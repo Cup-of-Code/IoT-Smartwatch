@@ -17,6 +17,8 @@
 #define _RST -1
 Adafruit_GC9A01A tft( _CS, _DC, _MOSI,  _SCLK, _MISO, _RST); //initilized LCD as "tft".
 
+String weatherData = ""; // Global variable to store weather data
+  
 
 //////// SPI FLASH RELATED ///////// Taken and adapted from example code in Adafruit ImageReader library: https://github.com/adafruit/Adafruit_ImageReader/blob/master/examples/TFTGizmo/TFTGizmo.ino
 // SPI or QSPI flash filesystem (i.e. CIRCUITPY drive)
@@ -93,7 +95,6 @@ const unsigned char heart[] PROGMEM ={
 };
 //////////////////////////////////////////////////////////////////////
 
-
 void heartrateSprite(){
     //draws the previously defined sprite and puts a background rectangle behind it 
   tft.fillRoundRect(130, 170,40 , 40, 5, 0x05f5);  
@@ -105,7 +106,6 @@ void footprintSprite(){
   tft.fillRoundRect(45, 170, 60, 40, 5, 0x05f5);  
   tft.drawBitmap(50, 175, footprint, 30, 30, 0x05f5, 0xFFFF);
 }
-
 
 
 
@@ -121,47 +121,75 @@ void setup() {
   //CircuitPlayground.irReceiver.enableIRIn(); // Start the IR receiver //commented out, waiting to be implemented
   //IR_protocol = 0; 
   homepage(); //runs the homepage function to display time etc
+  delay(2000);
   
 }
 
 
-  
+/// LOOP FUNCTION
 void loop() {  
   stepCounter();
   updateTime();  
   //menuFunc();
   UARTconnect();
-  // IR_send();
+  //IR_send();
   //rightButtonIR();
+  stepCountSend();
+  weatherPage();
+  
 }
  
 
+void weatherPage(){
+  if (CircuitPlayground.leftButton()){
+    tft.fillScreen(0x0000);
+    bool running = true; //set to manually be able to stop loop
+    ImageReturnCode stat; // Status from image-reading functions
+    // memory itself, then the second to access the filesystem within...
+    if(!flash.begin()) {
+      Serial.println(F("flash begin() failed"));
+      for(;;);
+    }
+    if(!filesys.begin(&flash)) {
+      Serial.println(F("filesys begin() failed"));
+      for(;;);
+    }
+    // Notice the 'reader' object performs this, with 'tft' as an argument.
+    stat = reader.drawBMP("/weather-forecast.bmp", tft, 0, 0);
+    tft.setFont();
+    tft.fillRoundRect(18, 75, 210, 50, 5, 0x0000);
+    tft.setTextColor(0xFFFF,0x0000); //first value is text color, second value is background color. Helps with refreshing in case of new data.
+    tft.setCursor(23, 80);
+    tft.println("Weather Forecast: ");
 
+    while (!CircuitPlayground.rightButton() && running){
+      tft.setCursor(23,110);
+    
+      tft.print(weatherData); //prints weatherdata gathered from UARTconnect function
 
-String weatherData = ""; // Global variable to store weather data
-
+      if(CircuitPlayground.rightButton()){
+        running = false;
+        homepage();
+      }
+    }
+  }
+}
 void UARTconnect() {
   // This code is responsible for the communication between the CPE and ESP-01 device. 
+
   // It reads data from the Serial Monitor and sends it to ESP8266
   if (Serial.available()) {
     char data = Serial.read();
     Serial1.write(data);
   }
 
-  // Reads data from ESP8266 and sends it to the Serial Monitor
+  // Reads data from ESP8266(& indirectly the mqtt broker) and sends it to the Serial Monitor
   if (Serial1.available()) {
     String data = Serial1.readStringUntil('\n');
-    if (data.startsWith("Weather")) {  // assuming data format is "inTopic:someValue"
+    if (data.startsWith("Weather")) {  //gets only the MQTT messages  in "inTopic" that starts with "Weather"
       int colonIndex = data.indexOf(':');
       if (colonIndex > -1) {
-        weatherData = data.substring(colonIndex+1);  // get the data part after the colon
-        homepage();
-        tft.setCursor(50, 40);
-        tft.setFont();
-        tft.setTextSize(2);
-        tft.print("Weather: ");
-        tft.setCursor(50,50);
-        tft.print(weatherData);
+        weatherData = data.substring(colonIndex+1);  // get the data part after the colon and saves it to 'weatherData' variable.
       }
     } else {
       Serial.println( data);
@@ -172,7 +200,7 @@ void UARTconnect() {
 
 
 void homepage(){
-
+  tft.fillScreen(0x0000);
   printWallpaper(); //PRINT WALLPAPER function
   initialTime(); //starts clock 
   footprintSprite(); 
@@ -297,20 +325,22 @@ void stepCounter(){
 }
 
 void stepCountSend(){
+  if (rtc.getHours()%2 == 0){ 
+    Serial1.println("steps: " +String(step_count));
+  }
   if (rtc.getHours()==23 && rtc.getMinutes()==59){ //checks if time is 23:59
-    Serial1.write(step_count); //sends total step_count of the day
+    Serial1.println("steps: " +String(step_count));
     step_count = 0; //resets the step count for next day after sending the data
   }
 }
 
 
 
-
 void rightButtonIR() {
     //Adapted from example code: https://github.com/adafruit/Adafruit_CircuitPlayground/tree/master/examples/Infrared_Demos/Infrared_Record
     //////// Function that records incomming IR signal and saves them if decoding sucessful.
-    if (CircuitPlayground.rightButton()) {
-      tft.println("recording");
+    while (CircuitPlayground.rightButton()) {
+      Serial.println("Recording");
       if(CircuitPlayground.irReceiver.getResults()) {
         //attempt to decode it
         if(CircuitPlayground.irDecoder.decode()) {
@@ -345,7 +375,6 @@ void IR_send(){
     }
   }
 }
-
 
 void menuFunc(){
 //function that adds menu-like functionality to the watch. Left buttons opens menu, right-button returns to home.

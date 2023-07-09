@@ -6,7 +6,10 @@ Github Repository link: https://github.com/Cup-of-Code/IoT-Smartwatch
 
 # Objective
 #### Video demo:
+
 <iframe width="560" height="315" src="https://youtu.be/k_mWFVTUdE4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
 
 In this tutorial I will go through how to make a diy IoT smartwatch! This is a project that I wanted to tackle for a while, since I really liked the idea of making an open-source fully customizable smartwatch that I could build my own functionalities into. The goal for now is to implement step counting, weather forcast information and Infrared signal decoding and sending. The watch will store and access data via a MQTT broker and InfluxDB database that is set up on local Home Assistant server running on a Raspberry Pi. Then the stored data will be visualized using grafana.
 
